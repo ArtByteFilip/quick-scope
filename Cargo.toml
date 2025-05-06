@@ -1,0 +1,8 @@
+[package]
+name = "quick-scope"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eframe = "0.26.0"
+screenshots = "0.8.5"
