@@ -18,6 +18,16 @@ impl Default for ScreenCaptureApp {
 
 impl eframe::App for ScreenCaptureApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            if let Some(texture) = &self.screen_image {
+                let size = egui::vec2(500.0, 500.0);
+                let available_size = ui.available_size();
+                let image_pos = (available_size - size) / 2.0;
+                ui.allocate_space(image_pos);
+                ui.image((texture.id(), size));
+            }
+        });
+
         // Request continuous repaints even when not focused
         ctx.request_repaint();
 
@@ -28,14 +38,14 @@ impl eframe::App for ScreenCaptureApp {
                     let center_x = screen.display_info.x + (screen.display_info.width as i32 / 2);
                     let center_y = screen.display_info.y + (screen.display_info.height as i32 / 2);
                     
-                    let x = center_x - 150; // 300/2 = 150
-                    let y = center_y - 150; // 300/2 = 150
+                    let x = center_x - 100; // 200/2 = 100
+                    let y = center_y - 100; // 200/2 = 100
                     
-                    let image = screen.capture_area(x, y, 300, 300).unwrap();
+                    let image = screen.capture_area(x, y, 200, 200).unwrap();
                     let pixels = image.as_raw();
 
                     let color_image = egui::ColorImage::from_rgba_unmultiplied(
-                        [300, 300],
+                        [200, 200],
                         pixels,
                     );
 
@@ -48,22 +58,19 @@ impl eframe::App for ScreenCaptureApp {
             }
             self.last_capture = std::time::Instant::now();
         }
-
-        egui::CentralPanel::default().show(ctx, |ui| {
-            if let Some(texture) = &self.screen_image {
-                let size = egui::vec2(750.0, 750.0);
-                ui.image((texture.id(), size));
-            }
-        });
     }
 }
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([750.0, 750.0])
+            .with_inner_size([500.0, 500.0])
             .with_always_on_top()
-            .with_transparent(true),
+            .with_transparent(true)
+            .with_decorations(false)
+            .with_window_level(egui::WindowLevel::AlwaysOnTop),
+        hardware_acceleration: eframe::HardwareAcceleration::Preferred,
+        vsync: false,
         ..Default::default()
     };
     
