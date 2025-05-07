@@ -5,6 +5,8 @@ use std::time::Duration;
 // Window settings
 const WINDOW_SIZE: f32 = 500.0;
 const WINDOW_REFRESH_RATE_MS: u64 = 10;
+const WINDOW_INITIAL_X: f32 = 900.0 - WINDOW_SIZE;  // Initial X position
+const WINDOW_INITIAL_Y: f32 = 900.0 - WINDOW_SIZE;  // Initial Y position
 
 // Capture settings
 const CAPTURE_SIZE: i32 = 200;
@@ -73,6 +75,7 @@ fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([WINDOW_SIZE, WINDOW_SIZE])
+            .with_position(egui::Pos2::new(WINDOW_INITIAL_X, WINDOW_INITIAL_Y))
             .with_always_on_top()
             .with_transparent(true)
             .with_decorations(false)
