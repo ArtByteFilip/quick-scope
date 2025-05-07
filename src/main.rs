@@ -2,6 +2,14 @@ use eframe::egui;
 use screenshots::Screen;
 use std::time::Duration;
 
+// Window settings
+const WINDOW_SIZE: f32 = 500.0;
+const WINDOW_REFRESH_RATE_MS: u64 = 10;
+
+// Capture settings
+const CAPTURE_SIZE: i32 = 200;
+const CAPTURE_OFFSET: i32 = CAPTURE_SIZE / 2; // Half of capture size to center it
+
 struct ScreenCaptureApp {
     screen_image: Option<egui::TextureHandle>,
     last_capture: std::time::Instant,
@@ -20,7 +28,7 @@ impl eframe::App for ScreenCaptureApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(texture) = &self.screen_image {
-                let size = egui::vec2(500.0, 500.0);
+                let size = egui::vec2(WINDOW_SIZE, WINDOW_SIZE);
                 let available_size = ui.available_size();
                 let image_pos = (available_size - size) / 2.0;
                 ui.allocate_space(image_pos);
@@ -31,29 +39,29 @@ impl eframe::App for ScreenCaptureApp {
         // Request continuous repaints even when not focused
         ctx.request_repaint();
 
-        // Capture screen every 10ms
-        if self.last_capture.elapsed() > Duration::from_millis(10) {
+        // Capture screen every WINDOW_REFRESH_RATE_MS
+        if self.last_capture.elapsed() > Duration::from_millis(WINDOW_REFRESH_RATE_MS) {
             if let Ok(screens) = Screen::all() {
                 if let Some(screen) = screens.first() {
                     let center_x = screen.display_info.x + (screen.display_info.width as i32 / 2);
                     let center_y = screen.display_info.y + (screen.display_info.height as i32 / 2);
                     
-                    let x = center_x - 100; // 200/2 = 100
-                    let y = center_y - 100; // 200/2 = 100
+                    let x = center_x - CAPTURE_OFFSET;
+                    let y = center_y - CAPTURE_OFFSET;
                     
-                    let image = screen.capture_area(x, y, 200, 200).unwrap();
-                    let pixels = image.as_raw();
+                    if let Ok(image) = screen.capture_area(x, y, CAPTURE_SIZE as u32, CAPTURE_SIZE as u32) {
+                        let pixels = image.as_raw();
+                        let color_image = egui::ColorImage::from_rgba_unmultiplied(
+                            [CAPTURE_SIZE as usize, CAPTURE_SIZE as usize],
+                            pixels,
+                        );
 
-                    let color_image = egui::ColorImage::from_rgba_unmultiplied(
-                        [200, 200],
-                        pixels,
-                    );
-
-                    self.screen_image = Some(ctx.load_texture(
-                        "screen_capture",
-                        color_image,
-                        egui::TextureOptions::default(),
-                    ));
+                        self.screen_image = Some(ctx.load_texture(
+                            "screen_capture",
+                            color_image,
+                            egui::TextureOptions::default(),
+                        ));
+                    }
                 }
             }
             self.last_capture = std::time::Instant::now();
@@ -64,7 +72,7 @@ impl eframe::App for ScreenCaptureApp {
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([500.0, 500.0])
+            .with_inner_size([WINDOW_SIZE, WINDOW_SIZE])
             .with_always_on_top()
             .with_transparent(true)
             .with_decorations(false)
